@@ -48,14 +48,18 @@ end
 
 # ===================================================================== problem
 #
-# HANDOFF COPY -- w1/w2 half of Study 3's GMN batch, meant to run on a
-# second 1 TiB machine in parallel with the w0=0.01 run staying on the
-# original machine (see paper_results/study3_T40_freq_compare/'s own
-# gmn_para.jl there for that one, plus the FM_/AFM_ reference-pair runs,
-# neither of which are included in this handoff copy).
+# HANDOFF COPY -- everything except AFM's own omega0=0.01, which is what's
+# still running on the original machine (see paper_results/
+# study3_T40_freq_compare/'s own gmn_para.jl there, plus the FM_/AFM_
+# reference-pair runs, neither of which are included in this handoff copy).
+# Originally just the w1/w2 (omega0=0.02, 0.04) trio; FM's own omega0=0.01
+# was added afterward once the original machine had AFM omega0=0.01
+# in flight and running a concurrent solve there was judged too risky
+# (see the MEMORY warning above -- a single solve was already at 403GB
+# RSS with only 708GB available system-wide when this was decided).
 #
-# Trimmed to exactly the 3 runs whose rho snapshots ship in ../GMN_results/
-# (54 files = 3 runs x 9 snapshots x [r,i]) -- all 6-site hexagon
+# Trimmed to exactly the 4 runs whose rho snapshots ship in ../GMN_results/
+# (72 files = 4 runs x 9 snapshots x [r,i]) -- all 6-site hexagon
 # (dims=[2,2,2,2,2,2]), theta=0.393, same protocol as the parent repo's
 # Study 3. No GMN_ONLY needed here; every entry in ALL_RUNS has its data.
 
@@ -66,6 +70,8 @@ const ALL_RUNS = [
      template = "AFM_jK0.05_jI0.015_w0.04_study3_{j}_1_theta0.393"),
     (name = "FM_study3_w0.04_", dims = [2, 2, 2, 2, 2, 2],
      template = "FM_jK0.05_jI0.0015_w0.04_study3_{j}_1_theta0.393"),
+    (name = "FM_study3_w0.01_", dims = [2, 2, 2, 2, 2, 2],
+     template = "FM_jK0.05_jI0.0015_w0.01_study3_{j}_1_theta0.393"),
 ]
 # GMN_ONLY="FM_" (or "AFM_", or "FM_,AFM_") restricts which of the above run
 # in this invocation -- e.g. AFM's rho isn't exported until its run_coupled.py

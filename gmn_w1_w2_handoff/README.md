@@ -1,15 +1,18 @@
-# GMN batch handoff -- omega_1 (0.02) and omega_2 (0.04)
+# GMN batch handoff -- omega_1/omega_2, plus FM's own omega_0
 
 Genuine multipartite negativity (GMN) for Study 3's frequency-comparison
 runs (`paper_results/study3_T40_freq_compare/` in the main repo), split
 across two machines to parallelize safely:
 
-- **This machine (wherever this folder ends up)**: the omega_1/omega_2
-  third of the batch -- AFM at J_I=0.015, omega0 in {0.02, 0.04}, and FM
-  at J_I=0.0015, omega0=0.04. **27 solves total** (3 runs x 9 time-point
-  snapshots each).
+- **This machine (wherever this folder ends up)**: AFM at J_I=0.015,
+  omega0 in {0.02, 0.04}; FM at J_I=0.0015, omega0 in {0.01, 0.04}.
+  **36 solves total** (4 runs x 9 time-point snapshots each).
 - **The original machine**: kept AFM omega0=0.01 (J_I=0.015) running
-  there, already partway through as of this handoff.
+  there. FM's own omega0=0.01 was moved here instead of running it
+  concurrently alongside AFM's omega0=0.01 on the original machine --
+  a single solve there was already at 403GB RSS (708GB available
+  system-wide) when that call was made, too close to the documented
+  ~700GB single-solve peak to risk a second concurrent one.
 
 **Why two machines instead of one with more workers:** a single GMN solve
 for this 64-dim/31-bipartition problem can approach or exceed ~700GB RSS
@@ -24,18 +27,19 @@ raise `GMN_WORKERS` above 1 on either machine.**
 ## What's here
 
 ```
-GMN_results/    54 files -- 3 runs x 9 snapshots x [real, imag] parts,
+GMN_results/    72 files -- 4 runs x 9 snapshots x [real, imag] parts,
                 already exported from the original run's coupled.npz via
                 run_coupled.py --replot --export-gmn --no-figures.
                 Filenames: {tag}_{j}_1_theta0.393_[ri].txt, j=1..9, where
                 tag is one of:
-                  AFM_jK0.05_jI0.015_w0.02_study3   (omega_1 = 2*omega_0)
-                  AFM_jK0.05_jI0.015_w0.04_study3   (omega_2 = 4*omega_0)
-                  FM_jK0.05_jI0.0015_w0.04_study3   (omega_2, FM)
+                  AFM_jK0.05_jI0.015_w0.02_study3    (omega_1 = 2*omega_0)
+                  AFM_jK0.05_jI0.015_w0.04_study3    (omega_2 = 4*omega_0)
+                  FM_jK0.05_jI0.0015_w0.04_study3    (omega_2, FM)
+                  FM_jK0.05_jI0.0015_w0.01_study3    (omega_0, FM)
 scripts/
   gmn_core.jl   Computational core (JuMP/Mosek model build + solve).
                 Unmodified from the main repo.
-  gmn_para.jl   Driver -- trimmed to exactly these 3 runs (see its own
+  gmn_para.jl   Driver -- trimmed to exactly these 4 runs (see its own
                 header). Unlike the main repo's copy, no GMN_ONLY
                 filtering is needed since every entry in its ALL_RUNS has
                 its data included here.
@@ -63,8 +67,8 @@ GMN_WORKERS=1 GMN_THREADS=16 GMN_CHUNKS=9 \
 ```
 
 Run it detached (`nohup ... &`, or `tmux`/`screen`) -- at the observed
-rate on the original machine (~2h45m/solve for this problem size), 27
-solves is **~74 hours (~3.1 days)**, though this machine's actual per-core
+rate on the original machine (~2h45m/solve for this problem size), 36
+solves is **~99 hours (~4.1 days)**, though this machine's actual per-core
 speed may differ.
 
 Progress checkpoints land in `GMN_calculation_res/partial_<name>j<k>-<k>.txt`
